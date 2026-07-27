@@ -125,8 +125,53 @@ export default function App() {
     }
   };
 
+  // Past Event History State (preserves historical record when starting a new event)
+  const [pastEvents, setPastEvents] = useState(() => {
+    const saved = localStorage.getItem('swsv_event_history');
+    return saved ? JSON.parse(saved) : [
+      {
+        id: 'hist-01',
+        eventTitle: 'Fiesta Demo Ejemplo Anterior 🌴',
+        date: '10 de Julio 2026',
+        archivedAt: '10/07/2026',
+        totalRevenue: 680,
+        occupiedBedsCount: 2,
+        noBedCouplesCount: 3,
+        couplesList: [
+          { partner: 'Carlos M. & Sofia R.', type: 'Cama #1 (King VIP)', status: 'Pagado en Sitio' },
+          { partner: 'Alejandro G. & Elena K.', type: 'Cama #3 (Queen)', status: 'Pendiente Post-Pago' },
+          { partner: 'Gabriel T. & Lucia B.', type: 'Pase Sin Cama', status: 'Pagado en Sitio' }
+        ]
+      }
+    ];
+  });
+
   const handleResetAllBookings = () => {
-    // Reset rooms and beds state to available
+    // 1. ARCHIVE HISTORICAL SNAPSHOT
+    const activeOccupiedBeds = rooms.flatMap(r => r.beds).filter(b => b.status !== 'available');
+    if (activeOccupiedBeds.length > 0 || noBedBookings.length > 0) {
+      const archiveRecord = {
+        id: 'hist-' + Date.now(),
+        eventTitle: eventData.title,
+        date: eventData.date,
+        archivedAt: new Date().toLocaleDateString('es-ES'),
+        totalRevenue: (occupiedBedsCount * 200) + (noBedBookings.length * 80),
+        occupiedBedsCount: activeOccupiedBeds.length,
+        noBedCouplesCount: noBedBookings.length,
+        couplesList: [
+          ...activeOccupiedBeds.map(b => ({ partner: b.reservedBy || 'Pareja Registrada', type: `Cama #${b.number} (${b.type})`, status: b.paymentStatus === 'paid' ? 'Pagado' : 'Pendiente' })),
+          ...noBedBookings.map(b => ({ partner: `${b.partner1} & ${b.partner2}`, type: 'Pase Sin Cama', status: b.paymentStatus === 'paid' ? 'Pagado' : 'Pendiente' }))
+        ]
+      };
+
+      setPastEvents(prev => {
+        const updated = [archiveRecord, ...prev];
+        localStorage.setItem('swsv_event_history', JSON.stringify(updated));
+        return updated;
+      });
+    }
+
+    // 2. RESET ACTIVE BEDS AND NO-BED STATE
     setRooms(prev => prev.map(room => ({
       ...room,
       beds: room.beds.map(bed => ({
@@ -137,13 +182,12 @@ export default function App() {
         phone: null
       }))
     })));
-    // Reset no-bed bookings
+
     setNoBedBookings([]);
 
-    // Reset Supabase DB if configured
+    // 3. UPDATE SUPABASE BEDS TO AVAILABLE (BOOKING HISTORICAL RECORDS REMAIN IN SUPABASE DB)
     if (isSupabaseConfigured && supabase) {
       supabase.from('beds').update({ status: 'available' }).neq('id', '00000000-0000-0000-0000-000000000000');
-      supabase.from('bookings').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     }
   };
 
@@ -603,6 +647,33 @@ export default function App() {
                 </p>
               </div>
             </div>
+
+            {/* HISTORIAL ARCHIVADO DE EVENTOS PASADOS */}
+            {pastEvents.length > 0 && (
+              <div style={{ marginTop: '20px', borderTop: '1px border-glass', paddingTop: '16px' }}>
+                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#c084fc', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  📜 Historial de Eventos Anteriores y Asistencias Archivadas ({pastEvents.length})
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {pastEvents.map((evt) => (
+                    <div key={evt.id} style={{ background: 'rgba(0,0,0,0.25)', padding: '12px 16px', borderRadius: '10px', fontSize: '0.82rem', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px', fontWeight: 700, color: 'var(--gold)' }}>
+                        <span>🎉 {evt.eventTitle} ({evt.date})</span>
+                        <span>Ingreso Generado: ${evt.totalRevenue} USD</span>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                        Camas Vendidas: {evt.occupiedBedsCount} | Parejas Sin Cama: {evt.noBedCouplesCount} | Archivado el: {evt.archivedAt}
+                      </div>
+                      {evt.couplesList && evt.couplesList.length > 0 && (
+                        <div style={{ marginTop: '6px', fontSize: '0.75rem', color: '#e5e7eb' }}>
+                          <strong>Parejas Registradas:</strong> {evt.couplesList.map(c => `${c.partner} (${c.type})`).join(' • ')}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
         )}
 
