@@ -412,6 +412,12 @@ export default function App() {
     const basePrice = bookingMode === 'with_bed' ? selectedBed.price : Number(eventData.noBedPrice);
     const finalPrice = basePrice + currentPricing.increase;
 
+    const bankDetailsMap = {
+      agricola: `Banco Agrícola (${eventData.bancoAgricolaAccount})`,
+      bac: `BAC Credomatic (${eventData.bacAccount})`,
+      transfer365: `Transfer365 Móvil (${eventData.transfer365Alias})`
+    };
+
     const newTicketData = {
       id: ticketId,
       refCode: refCode,
@@ -425,6 +431,8 @@ export default function App() {
       increaseAmount: currentPricing.increase,
       pricingPhaseLabel: currentPricing.label,
       paymentMethod: formPaymentMethod,
+      selectedBankTab: activeBankTab,
+      selectedBankInfo: bankDetailsMap[activeBankTab] || bankDetailsMap.agricola,
       voucherImage: formVoucherImage,
       paymentStatus: 'pending_postpay',
       createdAt: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
@@ -1114,7 +1122,7 @@ export default function App() {
               <div style={{ borderTop: '1px solid var(--border-glass)', paddingTop: '14px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <label style={{ fontSize: '0.82rem', color: 'var(--gold)', fontWeight: 700 }}>
-                    🏦 Cuentas Bancarias Locales (El Salvador)
+                    🏦 Selecciona el banco donde realizarás tu transferencia:
                   </label>
                   {copiedNotice && (
                     <span style={{ fontSize: '0.72rem', color: '#34d399', fontWeight: 700, background: 'rgba(16, 185, 129, 0.2)', padding: '2px 8px', borderRadius: '6px' }}>
@@ -1282,9 +1290,19 @@ export default function App() {
             </div>
 
             <div style={{ borderTop: '1px dashed rgba(255,255,255,0.2)', paddingTop: '16px', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Código Referencia Bancaria:</span>
-                <strong style={{ color: 'var(--gold)' }}>#{generatedTicket.refCode}</strong>
+                <strong style={{ color: 'var(--gold)', fontSize: '1.05rem' }}>#{generatedTicket.refCode}</strong>
+              </div>
+
+              {/* AVISO EXPLICATIVO DE REFERENCIA BANCARIA */}
+              <div style={{ background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '8px 12px', borderRadius: '8px', fontSize: '0.78rem', color: '#fbbf24', margin: '2px 0 6px 0', lineHeight: '1.4' }}>
+                💡 <strong>Importante:</strong> Agrega este código (<strong>#{generatedTicket.refCode}</strong>) en la descripción o concepto de tu transferencia para identificar tu pago inmediatamente.
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Cuenta Bancaria Seleccionada:</span>
+                <strong style={{ color: '#fff', fontSize: '0.82rem', textAlign: 'right' }}>{generatedTicket.selectedBankInfo || 'Banco Agrícola'}</strong>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
