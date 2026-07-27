@@ -125,6 +125,28 @@ export default function App() {
     }
   };
 
+  const handleResetAllBookings = () => {
+    // Reset rooms and beds state to available
+    setRooms(prev => prev.map(room => ({
+      ...room,
+      beds: room.beds.map(bed => ({
+        ...bed,
+        status: 'available',
+        reservedBy: null,
+        paymentStatus: null,
+        phone: null
+      }))
+    })));
+    // Reset no-bed bookings
+    setNoBedBookings([]);
+
+    // Reset Supabase DB if configured
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('beds').update({ status: 'available' }).neq('id', '00000000-0000-0000-0000-000000000000');
+      supabase.from('bookings').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    }
+  };
+
   const handleSaveEventData = (e) => {
     e.preventDefault();
     const updated = {
@@ -138,6 +160,11 @@ export default function App() {
     };
     setEventData(updated);
     setIsEditEventModalOpen(false);
+
+    // Ask organizer if they want to reset all bookings to 0 for this new party
+    if (window.confirm('🎉 Evento actualizado. ¿Deseas vaciar todas las reservas anteriores para iniciar este evento desde 0 (todas las camas libres)?')) {
+      handleResetAllBookings();
+    }
 
     // Save to Supabase if configured
     if (isSupabaseConfigured && supabase) {
@@ -501,32 +528,57 @@ export default function App() {
                 <ShieldCheck size={22} /> Panel de Control del Organizador
               </h3>
               
-              <button 
-                onClick={() => {
-                  setEditTitle(eventData.title);
-                  setEditSubtitle(eventData.subtitle);
-                  setEditLocation(eventData.location);
-                  setEditDate(eventData.date);
-                  setEditNoBedPrice(eventData.noBedPrice);
-                  setEditNoBedMax(eventData.noBedCapacityMax);
-                  setIsEditEventModalOpen(true);
-                }}
-                style={{
-                  background: 'rgba(245, 158, 11, 0.2)',
-                  border: '1px solid var(--gold)',
-                  color: 'var(--gold)',
-                  padding: '8px 16px',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                  fontSize: '0.82rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                ✏️ Editar Próxima Fiesta (Lugar, Fecha, Precios)
-              </button>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button 
+                  onClick={() => {
+                    setEditTitle(eventData.title);
+                    setEditSubtitle(eventData.subtitle);
+                    setEditLocation(eventData.location);
+                    setEditDate(eventData.date);
+                    setEditNoBedPrice(eventData.noBedPrice);
+                    setEditNoBedMax(eventData.noBedCapacityMax);
+                    setIsEditEventModalOpen(true);
+                  }}
+                  style={{
+                    background: 'rgba(245, 158, 11, 0.2)',
+                    border: '1px solid var(--gold)',
+                    color: 'var(--gold)',
+                    padding: '8px 16px',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    fontSize: '0.82rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  ✏️ Editar Próxima Fiesta
+                </button>
+
+                <button 
+                  onClick={() => {
+                    if (window.confirm('⚠️ ¿Estás seguro de vaciar todas las reservas anteriores? Todas las camas pasarán a estar LIBRES y la cuenta volverá a 0.')) {
+                      handleResetAllBookings();
+                    }
+                  }}
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.2)',
+                    border: '1px solid var(--status-occupied)',
+                    color: '#fca5a5',
+                    padding: '8px 16px',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    fontSize: '0.82rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  🔄 Vaciar / Reiniciar Reservas a 0
+                </button>
+              </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
