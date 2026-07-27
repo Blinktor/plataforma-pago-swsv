@@ -41,7 +41,7 @@ const INITIAL_ROOMS = [
     name: 'Suite Presidencial frente al Mar',
     description: 'Habitación luxury con vista directa al mar, jacuzzi y balcón privado.',
     beds: [
-      { id: 'bed-101', number: 1, type: 'King Size VIP', capacity: '1 Pareja (2 pers)', price: 250, status: 'occupied', reservedBy: 'Carlos M. & Sofia R.', paymentStatus: 'paid' },
+      { id: 'bed-101', number: 1, type: 'King Size VIP', capacity: '1 Pareja (2 pers)', price: 250, status: 'available', reservedBy: null, paymentStatus: null },
       { id: 'bed-102', number: 2, type: 'King Size VIP', capacity: '1 Pareja (2 pers)', price: 250, status: 'available', reservedBy: null, paymentStatus: null },
     ]
   },
@@ -50,7 +50,7 @@ const INITIAL_ROOMS = [
     name: 'Habitación Master Balcón',
     description: 'Vista a la piscina principal y aire acondicionado independiente.',
     beds: [
-      { id: 'bed-201', number: 3, type: 'Queen Size Premium', capacity: '1 Pareja (2 pers)', price: 200, status: 'reserved', reservedBy: 'Alejandro G. & Elena K.', paymentStatus: 'pending_postpay' },
+      { id: 'bed-201', number: 3, type: 'Queen Size Premium', capacity: '1 Pareja (2 pers)', price: 200, status: 'available', reservedBy: null, paymentStatus: null },
       { id: 'bed-202', number: 4, type: 'Queen Size Premium', capacity: '1 Pareja (2 pers)', price: 200, status: 'available', reservedBy: null, paymentStatus: null },
     ]
   },
@@ -61,15 +61,12 @@ const INITIAL_ROOMS = [
     beds: [
       { id: 'bed-301', number: 5, type: 'Matrimonial Gold', capacity: '1 Pareja (2 pers)', price: 170, status: 'available', reservedBy: null, paymentStatus: null },
       { id: 'bed-302', number: 6, type: 'Matrimonial Gold', capacity: '1 Pareja (2 pers)', price: 170, status: 'available', reservedBy: null, paymentStatus: null },
-      { id: 'bed-303', number: 7, type: 'Matrimonial Gold', capacity: '1 Pareja (2 pers)', price: 170, status: 'reserved', reservedBy: 'Diego P. & Valeria M.', paymentStatus: 'pending_postpay' },
+      { id: 'bed-303', number: 7, type: 'Matrimonial Gold', capacity: '1 Pareja (2 pers)', price: 170, status: 'available', reservedBy: null, paymentStatus: null },
     ]
   }
 ];
 
-const INITIAL_NO_BED_BOOKINGS = [
-  { id: 'nb-101', partner1: 'Gabriel T.', partner2: 'Lucia B.', phone: '+52 998 123 4567', paymentStatus: 'paid', date: '2026-07-25' },
-  { id: 'nb-102', partner1: 'Fernando R.', partner2: 'Camila S.', phone: '+52 998 876 5432', paymentStatus: 'pending_postpay', date: '2026-07-26' },
-];
+const INITIAL_NO_BED_BOOKINGS = [];
 
 export default function App() {
   const [isAdmin, setIsAdmin] = useState(() => {
@@ -128,22 +125,7 @@ export default function App() {
   // Past Event History State (preserves historical record when starting a new event)
   const [pastEvents, setPastEvents] = useState(() => {
     const saved = localStorage.getItem('swsv_event_history');
-    return saved ? JSON.parse(saved) : [
-      {
-        id: 'hist-01',
-        eventTitle: 'Fiesta Demo Ejemplo Anterior 🌴',
-        date: '10 de Julio 2026',
-        archivedAt: '10/07/2026',
-        totalRevenue: 680,
-        occupiedBedsCount: 2,
-        noBedCouplesCount: 3,
-        couplesList: [
-          { partner: 'Carlos M. & Sofia R.', type: 'Cama #1 (King VIP)', status: 'Pagado en Sitio' },
-          { partner: 'Alejandro G. & Elena K.', type: 'Cama #3 (Queen)', status: 'Pendiente Post-Pago' },
-          { partner: 'Gabriel T. & Lucia B.', type: 'Pase Sin Cama', status: 'Pagado en Sitio' }
-        ]
-      }
-    ];
+    return saved ? JSON.parse(saved) : [];
   });
 
   const handleResetAllBookings = () => {
