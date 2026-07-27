@@ -323,25 +323,23 @@ export default function App() {
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ 
-              width: '40px', 
-              height: '40px', 
-              borderRadius: '12px', 
-              background: 'linear-gradient(135deg, #8b5cf6, #ec4899)', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              fontWeight: 800,
-              fontSize: '1.2rem',
-              boxShadow: '0 0 16px rgba(139, 92, 246, 0.5)'
-            }}>
-              S
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="Swinger El Salvador" 
+              style={{ 
+                width: '44px', 
+                height: '44px', 
+                borderRadius: '12px', 
+                objectFit: 'cover',
+                boxShadow: '0 0 16px rgba(245, 158, 11, 0.4)',
+                border: '1px solid rgba(245, 158, 11, 0.4)'
+              }} 
+            />
             <div>
-              <h1 style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.5px', background: 'linear-gradient(90deg, #fff, #c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                SWSV VIP EVENTS
+              <h1 style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.5px', background: 'linear-gradient(90deg, #fff, #fbbf24)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                Swinger El Salvador
               </h1>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Plataforma de Reservas & Camas</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--gold)', fontWeight: 600 }}>@Swinger_SV</span>
             </div>
           </div>
 
