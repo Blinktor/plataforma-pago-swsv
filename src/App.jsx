@@ -889,17 +889,17 @@ export default function App() {
                 ¿PREFIERES ASISTIR SIN CAMA?
               </span>
               <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginTop: '4px' }}>
-                Pase de Pareja "Solo Fiesta / Day Pass"
+                Pase de Pareja y Singles "Solo Fiesta / Day Pass"
               </h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '600px', marginTop: '4px' }}>
-                Si no necesitas habitación pero quieres disfrutar de la fiesta, piscina y ambiente de la villa con tu pareja.
+                Si no necesitas habitación pero quieres disfrutar de la fiesta, piscina y ambiente de la villa con tu pareja o participar como single.
               </p>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block' }}>Precio por Pareja:</span>
-                <span style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--gold)' }}>${INITIAL_EVENT.noBedPrice} USD</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block' }}>Precio por Pareja / Single:</span>
+                <span style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--gold)' }}>${eventData.noBedPrice} USD</span>
               </div>
 
               <button 
@@ -1352,8 +1352,10 @@ export default function App() {
                               <option value="Cama King Size VIP">🛌 Cama King Size VIP</option>
                               <option value="Cama Queen Size Premium">🛌 Cama Queen Size</option>
                               <option value="Cama Matrimonial Gold">🛌 Cama Matrimonial</option>
-                              <option value="Camarote Superior (Litera)">🪜 Camarote Superior (Litera)</option>
-                              <option value="Camarote Inferior (Litera)">🪜 Camarote Inferior (Litera)</option>
+                              <option value="Camarote 1 - Superior (Litera)">🪜 Camarote 1 - Superior (Litera)</option>
+                              <option value="Camarote 1 - Inferior (Litera)">🪜 Camarote 1 - Inferior (Litera)</option>
+                              <option value="Camarote 2 - Superior (Litera)">🪜 Camarote 2 - Superior (Litera)</option>
+                              <option value="Camarote 2 - Inferior (Litera)">🪜 Camarote 2 - Inferior (Litera)</option>
                             </select>
                             <input 
                               type="number" 
