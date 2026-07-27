@@ -340,10 +340,10 @@ export default function App() {
                 fontSize: '1.45rem', 
                 fontWeight: 800, 
                 letterSpacing: '-0.3px', 
-                color: '#ffffff',
-                textShadow: '0 2px 8px rgba(0,0,0,0.6)'
+                color: '#fbbf24',
+                textShadow: '0 2px 10px rgba(0,0,0,0.7)'
               }}>
-                Swinger <span style={{ color: '#fbbf24' }}>El Salvador</span>
+                Swinger El Salvador
               </h1>
               <span style={{ fontSize: '0.88rem', color: '#f59e0b', fontWeight: 700, letterSpacing: '0.5px' }}>@Swinger_SV</span>
             </div>
