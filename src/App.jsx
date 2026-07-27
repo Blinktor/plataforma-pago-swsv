@@ -1160,21 +1160,9 @@ export default function App() {
                 </div>
               </div>
 
-              <div>
-                <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Mecanismo de Confirmación de Pago</label>
-                <select 
-                  value={formPaymentMethod}
-                  onChange={(e) => setFormPaymentMethod(e.target.value)}
-                  style={{ width: '100%', padding: '12px', borderRadius: '10px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.9rem' }}
-                >
-                  <option value="bank_transfer_whatsapp">📱 Notificar Transferencia por WhatsApp</option>
-                  <option value="bank_transfer_upload">🖼️ Subir Foto de Voucher / Comprobante en la Siguiente Ventana</option>
-                </select>
-              </div>
-
-              <div style={{ marginTop: '8px' }}>
+              <div style={{ marginTop: '12px' }}>
                 <button type="submit" className="glow-btn" style={{ width: '100%', padding: '14px', fontSize: '1rem' }}>
-                  Confirmar Reserva por Transferencia Bancaria 🏦
+                  Confirmar Reserva y Ver Datos de Transferencia 🏦
                 </button>
               </div>
 
