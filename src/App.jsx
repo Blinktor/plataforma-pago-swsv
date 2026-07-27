@@ -1167,35 +1167,10 @@ export default function App() {
                   onChange={(e) => setFormPaymentMethod(e.target.value)}
                   style={{ width: '100%', padding: '12px', borderRadius: '10px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.9rem' }}
                 >
-                  <option value="bank_transfer_whatsapp">📱 Notificar por WhatsApp + Enviar Foto de Comprobante</option>
-                  <option value="bank_transfer_upload">🖼️ Subir Foto/Voucher de Comprobante Directo Aquí</option>
+                  <option value="bank_transfer_whatsapp">📱 Notificar Transferencia por WhatsApp</option>
+                  <option value="bank_transfer_upload">🖼️ Subir Foto de Voucher / Comprobante en la Siguiente Ventana</option>
                 </select>
               </div>
-
-              {/* UPLOAD VOUCHER IF SELECTED */}
-              {formPaymentMethod === 'bank_transfer_upload' && (
-                <div>
-                  <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Adjuntar Captura / Comprobante de Transferencia</label>
-                  <input 
-                    type="file" 
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => setFormVoucherImage(reader.result);
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    style={{ width: '100%', padding: '8px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.8rem' }}
-                  />
-                  {formVoucherImage && (
-                    <div style={{ marginTop: '8px', textAlign: 'center' }}>
-                      <img src={formVoucherImage} alt="Voucher" style={{ maxHeight: '100px', borderRadius: '8px', border: '1px solid var(--gold)' }} />
-                    </div>
-                  )}
-                </div>
-              )}
 
               <div style={{ marginTop: '8px' }}>
                 <button type="submit" className="glow-btn" style={{ width: '100%', padding: '14px', fontSize: '1rem' }}>
@@ -1312,15 +1287,62 @@ export default function App() {
               </div>
             </div>
 
-            {/* COMPROBANTE ADJUNTADO PREVIEW */}
-            {generatedTicket.voucherImage && (
-              <div style={{ marginTop: '12px', textAlign: 'center', background: 'rgba(16, 185, 129, 0.12)', padding: '10px', borderRadius: '12px', border: '1px solid var(--status-free)' }}>
-                <span style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 700, display: 'block', marginBottom: '6px' }}>
-                  🖼️ Comprobante Adjuntado (En Verificación por Admin)
-                </span>
-                <img src={generatedTicket.voucherImage} alt="Voucher Adjuntado" style={{ maxHeight: '110px', borderRadius: '8px', border: '1px solid var(--gold)', margin: '0 auto' }} />
-              </div>
-            )}
+            {/* SECCIÓN INTERACTIVA DE ADJUNTAR COMPROBANTE DE PAGO EN EL TICKET PASS */}
+            <div style={{ marginTop: '14px', background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '12px', border: '1px dashed var(--gold)', textAlign: 'center' }}>
+              <span style={{ fontSize: '0.82rem', color: 'var(--gold)', fontWeight: 700, display: 'block', marginBottom: '4px' }}>
+                🖼️ Adjuntar Foto de Comprobante / Voucher
+              </span>
+              {generatedTicket.voucherImage ? (
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: '#34d399', fontWeight: 700, display: 'block', marginBottom: '6px' }}>
+                    ✅ Comprobante Recibido (En Verificación por Admin)
+                  </span>
+                  <img src={generatedTicket.voucherImage} alt="Voucher" style={{ maxHeight: '110px', borderRadius: '8px', border: '1px solid var(--gold)', margin: '0 auto 8px auto' }} />
+                  <label style={{ cursor: 'pointer', fontSize: '0.75rem', color: 'var(--text-muted)', textDecoration: 'underline', display: 'block' }}>
+                    Cambiar foto de comprobante
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setGeneratedTicket(prev => ({ ...prev, voucherImage: reader.result, paymentStatus: 'in_verification' }));
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+              ) : (
+                <div>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                    Al realizar tu transferencia con el código <strong>#{generatedTicket.refCode}</strong>, adjunta tu comprobante aquí:
+                  </p>
+                  <label style={{ display: 'inline-block', padding: '8px 16px', background: 'rgba(245, 158, 11, 0.25)', border: '1px solid var(--gold)', borderRadius: '8px', color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>
+                    📂 Subir Foto de Voucher Aquí
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setGeneratedTicket(prev => ({ ...prev, voucherImage: reader.result, paymentStatus: 'in_verification' }));
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+              )}
+            </div>
 
             <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <a 
