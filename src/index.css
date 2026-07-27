@@ -1,0 +1,174 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --bg-dark: #07090e;
+  --bg-card: rgba(18, 22, 34, 0.75);
+  --bg-card-hover: rgba(28, 34, 52, 0.85);
+  --border-glass: rgba(255, 255, 255, 0.12);
+  --border-neon: rgba(139, 92, 246, 0.4);
+  --primary: #8b5cf6;
+  --primary-glow: rgba(139, 92, 246, 0.35);
+  --secondary: #ec4899;
+  --gold: #f59e0b;
+  --gold-glow: rgba(245, 158, 11, 0.3);
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+  --status-free: #10b981;
+  --status-pending: #f59e0b;
+  --status-occupied: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.15) 0%, transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(236, 72, 153, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.8) 0%, var(--bg-dark) 100%);
+  background-attachment: fixed;
+}
+
+/* Glassmorphism containers */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-glass);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.3s ease;
+}
+
+.glass-panel:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-2px);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Animations */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(236, 72, 153, 0.6);
+  }
+}
+
+.glow-btn {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px var(--primary-glow);
+}
+
+.glow-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 28px rgba(236, 72, 153, 0.5);
+  filter: brightness(1.1);
+}
+
+.glow-btn:active {
+  transform: translateY(0);
+}
+
+.badge-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.dot-live {
+  width: 8px;
+  height: 8px;
+  background-color: var(--status-occupied);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--status-occupied);
+  animation: livePing 1.5s infinite;
+}
+
+@keyframes livePing {
+  0% { transform: scale(0.95); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.5; }
+  100% { transform: scale(0.95); opacity: 1; }
+}
+
+/* Modal backdrop */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 6, 12, 0.82);
+  backdrop-filter: blur(12px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.ticket-pass {
+  background: linear-gradient(145deg, rgba(20, 24, 40, 0.95), rgba(10, 12, 22, 0.98));
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 30px rgba(245, 158, 11, 0.15);
+}
+
+.ticket-pass::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.05) 0%, transparent 60%);
+  pointer-events: none;
+}
