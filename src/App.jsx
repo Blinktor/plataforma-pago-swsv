@@ -693,7 +693,7 @@ export default function App() {
 
               <div className="glass-card" style={{ padding: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                  <span>Cupos Pareja (Sin Cama)</span>
+                  <span>Cupos parejas, singles y unicornios (Sin Cama)</span>
                   <Users size={18} color="var(--primary)" />
                 </div>
                 <div style={{ fontSize: '1.8rem', fontWeight: 800, marginTop: '8px', color: '#c084fc' }}>
