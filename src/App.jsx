@@ -77,6 +77,9 @@ export default function App() {
   const [pinInput, setPinInput] = useState('');
   const [isEditEventModalOpen, setIsEditEventModalOpen] = useState(false);
 
+  const [rooms, setRooms] = useState(INITIAL_ROOMS);
+  const [editRooms, setEditRooms] = useState(INITIAL_ROOMS);
+
   // Edit Event Form State
   const [editTitle, setEditTitle] = useState(eventData.title);
   const [editSubtitle, setEditSubtitle] = useState(eventData.subtitle);
@@ -85,7 +88,6 @@ export default function App() {
   const [editNoBedPrice, setEditNoBedPrice] = useState(eventData.noBedPrice);
   const [editNoBedMax, setEditNoBedMax] = useState(eventData.noBedCapacityMax);
 
-  const [rooms, setRooms] = useState(INITIAL_ROOMS);
   const [noBedBookings, setNoBedBookings] = useState(INITIAL_NO_BED_BOOKINGS);
   const [selectedBed, setSelectedBed] = useState(null);
   const [bookingMode, setBookingMode] = useState(null); // 'with_bed' or 'no_bed'
@@ -97,6 +99,91 @@ export default function App() {
   const [formPartner2, setFormPartner2] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formPaymentMethod, setFormPaymentMethod] = useState('pay_on_site');
+
+  // Room & Bed Management Handlers for Edit Modal
+  const handleAddRoom = () => {
+    const newRoomId = 'room-' + Date.now();
+    const newRoom = {
+      id: newRoomId,
+      name: `Habitación / Área #${editRooms.length + 1}`,
+      description: 'Capacidad asignada para el evento',
+      beds: [
+        {
+          id: 'bed-' + Date.now(),
+          number: editRooms.flatMap(r => r.beds).length + 1,
+          type: 'Cama King Size VIP',
+          capacity: '1 Pareja (2 pers)',
+          price: 200,
+          status: 'available',
+          reservedBy: null,
+          paymentStatus: null
+        }
+      ]
+    };
+    setEditRooms([...editRooms, newRoom]);
+  };
+
+  const handleDeleteRoom = (roomId) => {
+    if (editRooms.length <= 1) {
+      alert('Debe existir al menos 1 habitación o área.');
+      return;
+    }
+    setEditRooms(editRooms.filter(r => r.id !== roomId));
+  };
+
+  const handleAddBedToRoom = (roomId) => {
+    setEditRooms(editRooms.map(room => {
+      if (room.id === roomId) {
+        const nextBedNum = editRooms.flatMap(r => r.beds).length + 1;
+        const newBed = {
+          id: 'bed-' + Date.now() + Math.random().toString().substr(2, 4),
+          number: nextBedNum,
+          type: 'Camarote Superior (Litera)',
+          capacity: '1 Pareja (2 pers)',
+          price: 180,
+          status: 'available',
+          reservedBy: null,
+          paymentStatus: null
+        };
+        return { ...room, beds: [...room.beds, newBed] };
+      }
+      return room;
+    }));
+  };
+
+  const handleDeleteBed = (roomId, bedId) => {
+    setEditRooms(editRooms.map(room => {
+      if (room.id === roomId) {
+        if (room.beds.length <= 1 && editRooms.length <= 1) {
+          alert('Debe haber al menos 1 cama disponible en el evento.');
+          return room;
+        }
+        return { ...room, beds: room.beds.filter(b => b.id !== bedId) };
+      }
+      return room;
+    }));
+  };
+
+  const handleUpdateBedField = (roomId, bedId, field, value) => {
+    setEditRooms(editRooms.map(room => {
+      if (room.id === roomId) {
+        return {
+          ...room,
+          beds: room.beds.map(bed => {
+            if (bed.id === bedId) {
+              return { ...bed, [field]: value };
+            }
+            return bed;
+          })
+        };
+      }
+      return room;
+    }));
+  };
+
+  const handleUpdateRoomName = (roomId, newName) => {
+    setEditRooms(editRooms.map(room => room.id === roomId ? { ...room, name: newName } : room));
+  };
 
   // Handle Admin Toggle
   const handleToggleAdminClick = () => {
@@ -185,6 +272,7 @@ export default function App() {
       noBedCapacityMax: Number(editNoBedMax)
     };
     setEventData(updated);
+    setRooms(editRooms);
     setIsEditEventModalOpen(false);
 
     // Ask organizer if they want to reset all bookings to 0 for this new party
@@ -563,6 +651,7 @@ export default function App() {
                     setEditDate(eventData.date);
                     setEditNoBedPrice(eventData.noBedPrice);
                     setEditNoBedMax(eventData.noBedCapacityMax);
+                    setEditRooms(JSON.parse(JSON.stringify(rooms)));
                     setIsEditEventModalOpen(true);
                   }}
                   style={{
@@ -1204,6 +1293,87 @@ export default function App() {
                     onChange={(e) => setEditNoBedMax(e.target.value)}
                     style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.9rem' }}
                   />
+                </div>
+              </div>
+
+              {/* SECCIÓN INTERACTIVA DE HABITACIONES, CAMAS Y CAMAROTES */}
+              <div style={{ borderTop: '1px solid var(--border-glass)', paddingTop: '14px', marginTop: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--gold)' }}>
+                    🛏️ Habitaciones, Camas y Camarotes (Literas)
+                  </h4>
+                  <button 
+                    type="button" 
+                    onClick={handleAddRoom}
+                    style={{ padding: '4px 10px', background: 'rgba(139, 92, 246, 0.25)', border: '1px solid var(--primary)', borderRadius: '8px', color: '#c084fc', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    + Agregar Habitación
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '220px', overflowY: 'auto', paddingRight: '4px' }}>
+                  {editRooms.map((room) => (
+                    <div key={room.id} style={{ background: 'rgba(0,0,0,0.35)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '8px' }}>
+                        <input 
+                          type="text" 
+                          value={room.name}
+                          onChange={(e) => handleUpdateRoomName(room.id, e.target.value)}
+                          style={{ flex: 1, padding: '4px 8px', borderRadius: '6px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.82rem', fontWeight: 700 }}
+                        />
+                        <button 
+                          type="button" 
+                          onClick={() => handleAddBedToRoom(room.id)}
+                          style={{ padding: '3px 8px', background: 'rgba(16, 185, 129, 0.2)', border: '1px solid var(--status-free)', borderRadius: '6px', color: 'var(--status-free)', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          + Cama/Camarote
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => handleDeleteRoom(room.id)}
+                          style={{ padding: '3px 6px', background: 'rgba(239, 68, 68, 0.2)', border: '1px solid var(--status-occupied)', borderRadius: '6px', color: '#fca5a5', fontSize: '0.72rem', cursor: 'pointer' }}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+
+                      {/* Lista de Camas/Camarotes */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {room.beds.map((bed) => (
+                          <div key={bed.id} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', minWidth: '55px' }}>
+                              Cama #{bed.number}:
+                            </span>
+                            <select 
+                              value={bed.type}
+                              onChange={(e) => handleUpdateBedField(room.id, bed.id, 'type', e.target.value)}
+                              style={{ flex: 2, padding: '4px 6px', borderRadius: '6px', background: 'rgba(0,0,0,0.6)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.75rem' }}
+                            >
+                              <option value="Cama King Size VIP">🛌 Cama King Size VIP</option>
+                              <option value="Cama Queen Size Premium">🛌 Cama Queen Size</option>
+                              <option value="Cama Matrimonial Gold">🛌 Cama Matrimonial</option>
+                              <option value="Camarote Superior (Litera)">🪜 Camarote Superior (Litera)</option>
+                              <option value="Camarote Inferior (Litera)">🪜 Camarote Inferior (Litera)</option>
+                            </select>
+                            <input 
+                              type="number" 
+                              value={bed.price}
+                              onChange={(e) => handleUpdateBedField(room.id, bed.id, 'price', Number(e.target.value))}
+                              placeholder="$ USD"
+                              style={{ flex: 1, padding: '4px 6px', borderRadius: '6px', background: 'rgba(0,0,0,0.6)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.75rem' }}
+                            />
+                            <button 
+                              type="button" 
+                              onClick={() => handleDeleteBed(room.id, bed.id)}
+                              style={{ padding: '2px 4px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem' }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
