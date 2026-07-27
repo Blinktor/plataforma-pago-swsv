@@ -413,10 +413,12 @@ export default function App() {
     const finalPrice = basePrice + currentPricing.increase;
 
     const bankDetailsMap = {
-      agricola: `Banco Agrícola (${eventData.bancoAgricolaAccount})`,
-      bac: `BAC Credomatic (${eventData.bacAccount})`,
-      transfer365: `Transfer365 Móvil (${eventData.transfer365Alias})`
+      agricola: { name: 'Banco Agrícola', account: eventData.bancoAgricolaAccount },
+      bac: { name: 'BAC Credomatic', account: eventData.bacAccount },
+      transfer365: { name: 'Transfer365 Móvil', account: eventData.transfer365Alias }
     };
+
+    const selectedBankObj = bankDetailsMap[activeBankTab] || bankDetailsMap.agricola;
 
     const newTicketData = {
       id: ticketId,
@@ -432,9 +434,10 @@ export default function App() {
       pricingPhaseLabel: currentPricing.label,
       paymentMethod: formPaymentMethod,
       selectedBankTab: activeBankTab,
-      selectedBankInfo: bankDetailsMap[activeBankTab] || bankDetailsMap.agricola,
+      selectedBankName: selectedBankObj.name,
+      selectedBankAccount: selectedBankObj.account,
       voucherImage: formVoucherImage,
-      paymentStatus: 'pending_postpay',
+      paymentStatus: formVoucherImage ? 'in_verification' : 'pending_postpay',
       createdAt: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
     };
 
@@ -1155,57 +1158,6 @@ export default function App() {
                     Transfer365
                   </button>
                 </div>
-
-                {/* Bank Card Info */}
-                <div style={{ background: 'rgba(0,0,0,0.4)', padding: '12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', fontSize: '0.82rem' }}>
-                  {activeBankTab === 'agricola' && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', display: 'block' }}>Banco Agrícola:</span>
-                        <strong style={{ color: '#fff' }}>{eventData.bancoAgricolaAccount}</strong>
-                      </div>
-                      <button 
-                        type="button" 
-                        onClick={() => handleCopyBank(eventData.bancoAgricolaAccount, 'N° Cuenta Banco Agrícola')}
-                        style={{ padding: '6px 10px', background: 'rgba(245, 158, 11, 0.25)', border: '1px solid var(--gold)', borderRadius: '6px', color: 'var(--gold)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
-                      >
-                        📋 Copiar
-                      </button>
-                    </div>
-                  )}
-
-                  {activeBankTab === 'bac' && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', display: 'block' }}>BAC Credomatic:</span>
-                        <strong style={{ color: '#fff' }}>{eventData.bacAccount}</strong>
-                      </div>
-                      <button 
-                        type="button" 
-                        onClick={() => handleCopyBank(eventData.bacAccount, 'N° Cuenta BAC Credomatic')}
-                        style={{ padding: '6px 10px', background: 'rgba(245, 158, 11, 0.25)', border: '1px solid var(--gold)', borderRadius: '6px', color: 'var(--gold)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
-                      >
-                        📋 Copiar
-                      </button>
-                    </div>
-                  )}
-
-                  {activeBankTab === 'transfer365' && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', display: 'block' }}>Transfer365 Móvil:</span>
-                        <strong style={{ color: '#fff' }}>{eventData.transfer365Alias}</strong>
-                      </div>
-                      <button 
-                        type="button" 
-                        onClick={() => handleCopyBank(eventData.transfer365Alias, 'Alias Transfer365')}
-                        style={{ padding: '6px 10px', background: 'rgba(245, 158, 11, 0.25)', border: '1px solid var(--gold)', borderRadius: '6px', color: 'var(--gold)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
-                      >
-                        📋 Copiar
-                      </button>
-                    </div>
-                  )}
-                </div>
               </div>
 
               <div>
@@ -1300,9 +1252,26 @@ export default function App() {
                 💡 <strong>Importante:</strong> Agrega este código (<strong>#{generatedTicket.refCode}</strong>) en la descripción o concepto de tu transferencia para identificar tu pago inmediatamente.
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Cuenta Bancaria Seleccionada:</span>
-                <strong style={{ color: '#fff', fontSize: '0.82rem', textAlign: 'right' }}>{generatedTicket.selectedBankInfo || 'Banco Agrícola'}</strong>
+              {/* TARJETA DE CUENTA BANCARIA PARA TRANSFERIR CON BOTÓN COPIAR EN LA VENTANA DEL TICKET */}
+              <div style={{ background: 'rgba(0,0,0,0.4)', padding: '12px', borderRadius: '12px', border: '1px solid var(--gold)', margin: '4px 0' }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', display: 'block', marginBottom: '2px' }}>
+                  Banco Seleccionado para Transferencia:
+                </span>
+                <strong style={{ color: 'var(--gold)', fontSize: '0.88rem', display: 'block' }}>
+                  {generatedTicket.selectedBankName || 'Banco Agrícola'}
+                </strong>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                  <span style={{ color: '#fff', fontSize: '0.88rem', fontWeight: 700 }}>
+                    {generatedTicket.selectedBankAccount}
+                  </span>
+                  <button 
+                    type="button"
+                    onClick={() => handleCopyBank(generatedTicket.selectedBankAccount, generatedTicket.selectedBankName)}
+                    style={{ padding: '6px 12px', background: 'rgba(245, 158, 11, 0.25)', border: '1px solid var(--gold)', borderRadius: '8px', color: 'var(--gold)', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    📋 Copiar N°
+                  </button>
+                </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -1328,7 +1297,17 @@ export default function App() {
               </div>
             </div>
 
-            <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* COMPROBANTE ADJUNTADO PREVIEW */}
+            {generatedTicket.voucherImage && (
+              <div style={{ marginTop: '12px', textAlign: 'center', background: 'rgba(16, 185, 129, 0.12)', padding: '10px', borderRadius: '12px', border: '1px solid var(--status-free)' }}>
+                <span style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 700, display: 'block', marginBottom: '6px' }}>
+                  🖼️ Comprobante Adjuntado (En Verificación por Admin)
+                </span>
+                <img src={generatedTicket.voucherImage} alt="Voucher Adjuntado" style={{ maxHeight: '110px', borderRadius: '8px', border: '1px solid var(--gold)', margin: '0 auto' }} />
+              </div>
+            )}
+
+            <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <a 
                 href={`https://wa.me/?text=${encodeURIComponent(`Hola Swinger El Salvador! Acabo de hacer la reserva #${generatedTicket.id} con la Referencia Bancaria #${generatedTicket.refCode} a nombre de ${generatedTicket.partner1} & ${generatedTicket.partner2}. Modalidad: ${generatedTicket.mode === 'with_bed' ? 'Con Cama #' + generatedTicket.bedInfo?.number : 'Sin Cama'}. Monto: $${generatedTicket.price} USD. Te adjunto el comprobante de transferencia.`)}`}
                 target="_blank" 
