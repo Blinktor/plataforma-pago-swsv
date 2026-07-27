@@ -1058,7 +1058,7 @@ export default function App() {
           <div 
             className="glass-panel" 
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '520px', width: '100%', padding: '28px', border: '1px solid rgba(139, 92, 246, 0.4)', borderRadius: '24px' }}
+            style={{ maxWidth: '520px', width: '100%', maxHeight: '85vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '24px', border: '1px solid rgba(139, 92, 246, 0.4)', borderRadius: '24px' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <div>
@@ -1431,7 +1431,7 @@ export default function App() {
           <div 
             className="glass-panel" 
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '520px', width: '100%', padding: '28px', borderRadius: '24px', border: '1px solid var(--gold)' }}
+            style={{ maxWidth: '540px', width: '100%', maxHeight: '85vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', padding: '24px', borderRadius: '24px', border: '1px solid var(--gold)' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <div>
