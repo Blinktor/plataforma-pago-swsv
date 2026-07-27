@@ -1242,9 +1242,24 @@ export default function App() {
             </div>
 
             <div style={{ borderTop: '1px dashed rgba(255,255,255,0.2)', paddingTop: '16px', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {copiedNotice && (
+                <div style={{ background: 'rgba(16, 185, 129, 0.2)', border: '1px solid #34d399', color: '#34d399', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', textAlign: 'center', fontWeight: 700, marginBottom: '6px' }}>
+                  {copiedNotice}
+                </div>
+              )}
+
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Código Referencia Bancaria:</span>
-                <strong style={{ color: 'var(--gold)', fontSize: '1.05rem' }}>#{generatedTicket.refCode}</strong>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <strong style={{ color: 'var(--gold)', fontSize: '1.1rem' }}>#{generatedTicket.refCode}</strong>
+                  <button 
+                    type="button"
+                    onClick={() => handleCopyBank(`#${generatedTicket.refCode}`, 'Código de Referencia')}
+                    style={{ padding: '4px 10px', background: 'rgba(245, 158, 11, 0.25)', border: '1px solid var(--gold)', borderRadius: '6px', color: 'var(--gold)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    📋 Copiar
+                  </button>
+                </div>
               </div>
 
               {/* AVISO EXPLICATIVO DE REFERENCIA BANCARIA */}
