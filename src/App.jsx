@@ -24,15 +24,23 @@ import {
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 
-// Sample Villa & Event Data
+// Sample Villa & Event Data with El Salvador Bank Accounts & Dynamic Pricing
 const INITIAL_EVENT = {
   id: 'ev-01',
   title: 'Sunset Beach & Airbnb Villa Night 🌴',
   subtitle: 'Evento Exclusivo para Parejas | Capacidad Limitada por Camas',
   location: 'Villa Sol & Mar, Tulum / Playa del Carmen',
-  date: 'Sábado, 15 de Agosto 2026 - 7:00 PM',
+  date: 'Sábado, 22 de Agosto 2026 - 7:00 PM',
   noBedCapacityMax: 15,
-  noBedPrice: 80, // USD
+  noBedPrice: 80, // USD Precio Base Preventa
+  salesStartDate: '2026-08-01',
+  presaleEndDate: '2026-08-15',
+  regularPriceIncrease: 10, // Incremento de $10 USD en venta regular
+  overridePhase: 'auto', // 'auto', 'force_presale', 'force_regular'
+  // Cuentas Bancarias El Salvador para Transferencias
+  bancoAgricolaAccount: '003001234567 (Cta. Ahorros Banco Agrícola)',
+  bacAccount: '110987654 (BAC Credomatic / Transfer365)',
+  transfer365Alias: '+503 7890-1234 (Alias Transfer365 Móvil)'
 };
 
 const INITIAL_ROOMS = [
@@ -80,13 +88,20 @@ export default function App() {
   const [rooms, setRooms] = useState(INITIAL_ROOMS);
   const [editRooms, setEditRooms] = useState(INITIAL_ROOMS);
 
-  // Edit Event Form State
+  // Edit Event Form State (including Dynamic Pricing & Bank Accounts)
   const [editTitle, setEditTitle] = useState(eventData.title);
   const [editSubtitle, setEditSubtitle] = useState(eventData.subtitle);
   const [editLocation, setEditLocation] = useState(eventData.location);
   const [editDate, setEditDate] = useState(eventData.date);
   const [editNoBedPrice, setEditNoBedPrice] = useState(eventData.noBedPrice);
   const [editNoBedMax, setEditNoBedMax] = useState(eventData.noBedCapacityMax);
+  const [editSalesStartDate, setEditSalesStartDate] = useState(eventData.salesStartDate);
+  const [editPresaleEndDate, setEditPresaleEndDate] = useState(eventData.presaleEndDate);
+  const [editRegularPriceIncrease, setEditRegularPriceIncrease] = useState(eventData.regularPriceIncrease);
+  const [editOverridePhase, setEditOverridePhase] = useState(eventData.overridePhase);
+  const [editBancoAgricola, setEditBancoAgricola] = useState(eventData.bancoAgricolaAccount);
+  const [editBac, setEditBac] = useState(eventData.bacAccount);
+  const [editTransfer365, setEditTransfer365] = useState(eventData.transfer365Alias);
 
   const [noBedBookings, setNoBedBookings] = useState(INITIAL_NO_BED_BOOKINGS);
   const [selectedBed, setSelectedBed] = useState(null);
@@ -98,7 +113,36 @@ export default function App() {
   const [formPartner1, setFormPartner1] = useState('');
   const [formPartner2, setFormPartner2] = useState('');
   const [formPhone, setFormPhone] = useState('');
-  const [formPaymentMethod, setFormPaymentMethod] = useState('pay_on_site');
+  const [formPaymentMethod, setFormPaymentMethod] = useState('bank_transfer_whatsapp'); // 'bank_transfer_whatsapp' or 'bank_transfer_upload'
+  const [formVoucherImage, setFormVoucherImage] = useState(null);
+  const [activeBankTab, setActiveBankTab] = useState('agricola');
+  const [copiedNotice, setCopiedNotice] = useState('');
+
+  // Calculate Dynamic Pricing Phase
+  const calculatePricingPhase = () => {
+    if (eventData.overridePhase === 'force_presale') {
+      return { phase: 'presale', increase: 0, label: '⚡ PREVENTA ACTIVA' };
+    }
+    if (eventData.overridePhase === 'force_regular') {
+      return { phase: 'regular', increase: Number(eventData.regularPriceIncrease) || 10, label: `🔥 VENTA REGULAR (+ $${eventData.regularPriceIncrease || 10} USD)` };
+    }
+    const today = new Date().toISOString().split('T')[0];
+    if (eventData.salesStartDate && today < eventData.salesStartDate) {
+      return { phase: 'upcoming', increase: 0, label: `🔒 VENTA INICIA EL ${eventData.salesStartDate}` };
+    }
+    if (eventData.presaleEndDate && today <= eventData.presaleEndDate) {
+      return { phase: 'presale', increase: 0, label: `⚡ PREVENTA ACTIVA (HASTA ${eventData.presaleEndDate})` };
+    }
+    return { phase: 'regular', increase: Number(eventData.regularPriceIncrease) || 10, label: `🔥 VENTA REGULAR (+ $${eventData.regularPriceIncrease || 10} USD)` };
+  };
+
+  const currentPricing = calculatePricingPhase();
+
+  const handleCopyBank = (text, name) => {
+    navigator.clipboard.writeText(text);
+    setCopiedNotice(`¡${name} copiado al portapapeles!`);
+    setTimeout(() => setCopiedNotice(''), 3000);
+  };
 
   // Room & Bed Management Handlers for Edit Modal
   const handleAddRoom = () => {
@@ -269,7 +313,14 @@ export default function App() {
       location: editLocation,
       date: editDate,
       noBedPrice: Number(editNoBedPrice),
-      noBedCapacityMax: Number(editNoBedMax)
+      noBedCapacityMax: Number(editNoBedMax),
+      salesStartDate: editSalesStartDate,
+      presaleEndDate: editPresaleEndDate,
+      regularPriceIncrease: Number(editRegularPriceIncrease),
+      overridePhase: editOverridePhase,
+      bancoAgricolaAccount: editBancoAgricola,
+      bacAccount: editBac,
+      transfer365Alias: editTransfer365
     };
     setEventData(updated);
     setRooms(editRooms);
@@ -357,17 +408,24 @@ export default function App() {
     }
 
     const ticketId = 'SWSV-' + Math.floor(1000 + Math.random() * 9000);
-    const price = bookingMode === 'with_bed' ? selectedBed.price : INITIAL_EVENT.noBedPrice;
+    const refCode = 'SV-' + Math.floor(1000 + Math.random() * 9000);
+    const basePrice = bookingMode === 'with_bed' ? selectedBed.price : Number(eventData.noBedPrice);
+    const finalPrice = basePrice + currentPricing.increase;
 
     const newTicketData = {
       id: ticketId,
+      refCode: refCode,
       partner1: formPartner1,
       partner2: formPartner2,
       phone: formPhone,
       mode: bookingMode,
       bedInfo: selectedBed,
-      price: price,
+      price: finalPrice,
+      basePrice: basePrice,
+      increaseAmount: currentPricing.increase,
+      pricingPhaseLabel: currentPricing.label,
       paymentMethod: formPaymentMethod,
+      voucherImage: formVoucherImage,
       paymentStatus: 'pending_postpay',
       createdAt: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
     };
@@ -1052,21 +1110,136 @@ export default function App() {
                 />
               </div>
 
+              {/* INSTRUCCIONES DE TRANSFERENCIA BANCARIA EL SALVADOR */}
+              <div style={{ borderTop: '1px solid var(--border-glass)', paddingTop: '14px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ fontSize: '0.82rem', color: 'var(--gold)', fontWeight: 700 }}>
+                    🏦 Cuentas Bancarias Locales (El Salvador)
+                  </label>
+                  {copiedNotice && (
+                    <span style={{ fontSize: '0.72rem', color: '#34d399', fontWeight: 700, background: 'rgba(16, 185, 129, 0.2)', padding: '2px 8px', borderRadius: '6px' }}>
+                      {copiedNotice}
+                    </span>
+                  )}
+                </div>
+
+                {/* Bank Tabs */}
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => setActiveBankTab('agricola')}
+                    style={{ flex: 1, padding: '6px', borderRadius: '8px', border: activeBankTab === 'agricola' ? '1px solid var(--gold)' : '1px solid var(--border-glass)', background: activeBankTab === 'agricola' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(0,0,0,0.3)', color: activeBankTab === 'agricola' ? 'var(--gold)' : 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    Agrícola
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setActiveBankTab('bac')}
+                    style={{ flex: 1, padding: '6px', borderRadius: '8px', border: activeBankTab === 'bac' ? '1px solid var(--gold)' : '1px solid var(--border-glass)', background: activeBankTab === 'bac' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(0,0,0,0.3)', color: activeBankTab === 'bac' ? 'var(--gold)' : 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    BAC Credomatic
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setActiveBankTab('transfer365')}
+                    style={{ flex: 1, padding: '6px', borderRadius: '8px', border: activeBankTab === 'transfer365' ? '1px solid var(--gold)' : '1px solid var(--border-glass)', background: activeBankTab === 'transfer365' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(0,0,0,0.3)', color: activeBankTab === 'transfer365' ? 'var(--gold)' : 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    Transfer365
+                  </button>
+                </div>
+
+                {/* Bank Card Info */}
+                <div style={{ background: 'rgba(0,0,0,0.4)', padding: '12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', fontSize: '0.82rem' }}>
+                  {activeBankTab === 'agricola' && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', display: 'block' }}>Banco Agrícola:</span>
+                        <strong style={{ color: '#fff' }}>{eventData.bancoAgricolaAccount}</strong>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => handleCopyBank(eventData.bancoAgricolaAccount, 'N° Cuenta Banco Agrícola')}
+                        style={{ padding: '6px 10px', background: 'rgba(245, 158, 11, 0.25)', border: '1px solid var(--gold)', borderRadius: '6px', color: 'var(--gold)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        📋 Copiar
+                      </button>
+                    </div>
+                  )}
+
+                  {activeBankTab === 'bac' && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', display: 'block' }}>BAC Credomatic:</span>
+                        <strong style={{ color: '#fff' }}>{eventData.bacAccount}</strong>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => handleCopyBank(eventData.bacAccount, 'N° Cuenta BAC Credomatic')}
+                        style={{ padding: '6px 10px', background: 'rgba(245, 158, 11, 0.25)', border: '1px solid var(--gold)', borderRadius: '6px', color: 'var(--gold)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        📋 Copiar
+                      </button>
+                    </div>
+                  )}
+
+                  {activeBankTab === 'transfer365' && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', display: 'block' }}>Transfer365 Móvil:</span>
+                        <strong style={{ color: '#fff' }}>{eventData.transfer365Alias}</strong>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => handleCopyBank(eventData.transfer365Alias, 'Alias Transfer365')}
+                        style={{ padding: '6px 10px', background: 'rgba(245, 158, 11, 0.25)', border: '1px solid var(--gold)', borderRadius: '6px', color: 'var(--gold)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        📋 Copiar
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div>
-                <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Opción de Post-Pago Preferida</label>
+                <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Mecanismo de Confirmación de Pago</label>
                 <select 
                   value={formPaymentMethod}
                   onChange={(e) => setFormPaymentMethod(e.target.value)}
                   style={{ width: '100%', padding: '12px', borderRadius: '10px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.9rem' }}
                 >
-                  <option value="pay_on_site">💵 Pago en la Puerta del Evento (Efectivo/Terminal)</option>
-                  <option value="bank_transfer">📱 Transferencia Previa (Confirmar por WhatsApp)</option>
+                  <option value="bank_transfer_whatsapp">📱 Notificar por WhatsApp + Enviar Foto de Comprobante</option>
+                  <option value="bank_transfer_upload">🖼️ Subir Foto/Voucher de Comprobante Directo Aquí</option>
                 </select>
               </div>
 
+              {/* UPLOAD VOUCHER IF SELECTED */}
+              {formPaymentMethod === 'bank_transfer_upload' && (
+                <div>
+                  <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Adjuntar Captura / Comprobante de Transferencia</label>
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => setFormVoucherImage(reader.result);
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    style={{ width: '100%', padding: '8px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.8rem' }}
+                  />
+                  {formVoucherImage && (
+                    <div style={{ marginTop: '8px', textAlign: 'center' }}>
+                      <img src={formVoucherImage} alt="Voucher" style={{ maxHeight: '100px', borderRadius: '8px', border: '1px solid var(--gold)' }} />
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div style={{ marginTop: '8px' }}>
                 <button type="submit" className="glow-btn" style={{ width: '100%', padding: '14px', fontSize: '1rem' }}>
-                  Generar Reserva Post-Pago 🎫
+                  Confirmar Reserva por Transferencia Bancaria 🏦
                 </button>
               </div>
 
@@ -1110,8 +1283,8 @@ export default function App() {
 
             <div style={{ borderTop: '1px dashed rgba(255,255,255,0.2)', paddingTop: '16px', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Ticket ID:</span>
-                <strong style={{ color: 'var(--gold)' }}>#{generatedTicket.id}</strong>
+                <span style={{ color: 'var(--text-muted)' }}>Código Referencia Bancaria:</span>
+                <strong style={{ color: 'var(--gold)' }}>#{generatedTicket.refCode}</strong>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -1127,14 +1300,19 @@ export default function App() {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Monto a pagar:</span>
-                <strong>${generatedTicket.price} USD</strong>
+                <span style={{ color: 'var(--text-muted)' }}>Fase Tarifa:</span>
+                <span style={{ color: '#34d399', fontWeight: 700 }}>{generatedTicket.pricingPhaseLabel || 'Preventa'}</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Monto a Transferir:</span>
+                <strong style={{ color: 'var(--gold)', fontSize: '1rem' }}>${generatedTicket.price} USD</strong>
               </div>
             </div>
 
             <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <a 
-                href={`https://wa.me/?text=${encodeURIComponent(`Hola Organizador! Acabo de hacer la reserva #${generatedTicket.id} a nombre de ${generatedTicket.partner1} & ${generatedTicket.partner2} para el evento SWSV. Modalidad: ${generatedTicket.mode === 'with_bed' ? 'Con Cama #' + generatedTicket.bedInfo?.number : 'Sin Cama'}. Confirmaré pago en puerta.`)}`}
+                href={`https://wa.me/?text=${encodeURIComponent(`Hola Swinger El Salvador! Acabo de hacer la reserva #${generatedTicket.id} con la Referencia Bancaria #${generatedTicket.refCode} a nombre de ${generatedTicket.partner1} & ${generatedTicket.partner2}. Modalidad: ${generatedTicket.mode === 'with_bed' ? 'Con Cama #' + generatedTicket.bedInfo?.number : 'Sin Cama'}. Monto: $${generatedTicket.price} USD. Te adjunto el comprobante de transferencia.`)}`}
                 target="_blank" 
                 rel="noreferrer"
                 style={{ 
@@ -1151,7 +1329,7 @@ export default function App() {
                   fontSize: '0.9rem'
                 }}
               >
-                <Send size={18} /> Confirmar Reserva por WhatsApp
+                <Send size={18} /> Enviar Comprobante por WhatsApp
               </a>
 
               <button 
@@ -1300,6 +1478,94 @@ export default function App() {
                     onChange={(e) => setEditNoBedMax(e.target.value)}
                     style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.9rem' }}
                   />
+                </div>
+              </div>
+
+              {/* CONFIGURACIÓN DE PRECIOS DINÁMICOS Y DÍAS DE PREVENTA */}
+              <div style={{ borderTop: '1px solid var(--border-glass)', paddingTop: '14px', marginTop: '6px' }}>
+                <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--gold)', marginBottom: '8px' }}>
+                  ⏳ Precios Dinámicos por Fecha (Preventa vs Venta Regular)
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Inicio Venta</label>
+                    <input 
+                      type="date" 
+                      value={editSalesStartDate}
+                      onChange={(e) => setEditSalesStartDate(e.target.value)}
+                      style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.82rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Fin Preventa (Fecha Límite)</label>
+                    <input 
+                      type="date" 
+                      value={editPresaleEndDate}
+                      onChange={(e) => setEditPresaleEndDate(e.target.value)}
+                      style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.82rem' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '8px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Aumento Venta Regular ($ USD)</label>
+                    <input 
+                      type="number" 
+                      value={editRegularPriceIncrease}
+                      onChange={(e) => setEditRegularPriceIncrease(e.target.value)}
+                      placeholder="10"
+                      style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.82rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Modo Manual de Fase</label>
+                    <select 
+                      value={editOverridePhase}
+                      onChange={(e) => setEditOverridePhase(e.target.value)}
+                      style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.82rem' }}
+                    >
+                      <option value="auto">🤖 Automático por Calendario</option>
+                      <option value="force_presale">⚡ Forzar Estado PREVENTA</option>
+                      <option value="force_regular">🔥 Forzar VENTA REGULAR (+ $10)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* CONFIGURACIÓN DE CUENTAS BANCARIAS EL SALVADOR */}
+              <div style={{ borderTop: '1px solid var(--border-glass)', paddingTop: '14px', marginTop: '6px' }}>
+                <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--gold)', marginBottom: '8px' }}>
+                  🏦 Cuentas Bancarias para Transferencias (El Salvador)
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Banco Agrícola (N° de Cuenta)</label>
+                    <input 
+                      type="text" 
+                      value={editBancoAgricola}
+                      onChange={(e) => setEditBancoAgricola(e.target.value)}
+                      style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.82rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>BAC Credomatic (N° Cuenta / IBAN)</label>
+                    <input 
+                      type="text" 
+                      value={editBac}
+                      onChange={(e) => setEditBac(e.target.value)}
+                      style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.82rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Transfer365 / Alias Móvil</label>
+                    <input 
+                      type="text" 
+                      value={editTransfer365}
+                      onChange={(e) => setEditTransfer365(e.target.value)}
+                      style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.82rem' }}
+                    />
+                  </div>
                 </div>
               </div>
 
