@@ -72,7 +72,22 @@ const INITIAL_NO_BED_BOOKINGS = [
 ];
 
 export default function App() {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(() => {
+    return sessionStorage.getItem('swsv_admin') === 'true';
+  });
+  const [eventData, setEventData] = useState(INITIAL_EVENT);
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [isEditEventModalOpen, setIsEditEventModalOpen] = useState(false);
+
+  // Edit Event Form State
+  const [editTitle, setEditTitle] = useState(eventData.title);
+  const [editSubtitle, setEditSubtitle] = useState(eventData.subtitle);
+  const [editLocation, setEditLocation] = useState(eventData.location);
+  const [editDate, setEditDate] = useState(eventData.date);
+  const [editNoBedPrice, setEditNoBedPrice] = useState(eventData.noBedPrice);
+  const [editNoBedMax, setEditNoBedMax] = useState(eventData.noBedCapacityMax);
+
   const [rooms, setRooms] = useState(INITIAL_ROOMS);
   const [noBedBookings, setNoBedBookings] = useState(INITIAL_NO_BED_BOOKINGS);
   const [selectedBed, setSelectedBed] = useState(null);
@@ -85,6 +100,60 @@ export default function App() {
   const [formPartner2, setFormPartner2] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formPaymentMethod, setFormPaymentMethod] = useState('pay_on_site');
+
+  // Handle Admin Toggle
+  const handleToggleAdminClick = () => {
+    if (isAdmin) {
+      setIsAdmin(false);
+      sessionStorage.removeItem('swsv_admin');
+    } else {
+      setIsPinModalOpen(true);
+    }
+  };
+
+  const handleVerifyPin = (e) => {
+    e.preventDefault();
+    const correctPin = import.meta.env.VITE_ADMIN_PIN || '2026';
+    if (pinInput === correctPin) {
+      setIsAdmin(true);
+      sessionStorage.setItem('swsv_admin', 'true');
+      setIsPinModalOpen(false);
+      setPinInput('');
+    } else {
+      alert('🔒 PIN Incorrecto. Acceso Denegado.');
+      setPinInput('');
+    }
+  };
+
+  const handleSaveEventData = (e) => {
+    e.preventDefault();
+    const updated = {
+      ...eventData,
+      title: editTitle,
+      subtitle: editSubtitle,
+      location: editLocation,
+      date: editDate,
+      noBedPrice: Number(editNoBedPrice),
+      noBedCapacityMax: Number(editNoBedMax)
+    };
+    setEventData(updated);
+    setIsEditEventModalOpen(false);
+
+    // Save to Supabase if configured
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('events').upsert([{
+        id: updated.id,
+        title: updated.title,
+        subtitle: updated.subtitle,
+        location: updated.location,
+        event_date: new Date().toISOString(),
+        no_bed_max_capacity: updated.noBedCapacityMax,
+        no_bed_price: updated.noBedPrice
+      }]).then(({ error }) => {
+        if (error) console.error('Error saving event to Supabase:', error);
+      });
+    }
+  };
 
   // Supabase Realtime Listener (if configured)
   useEffect(() => {
@@ -303,7 +372,7 @@ export default function App() {
 
             {/* Mode Switcher */}
             <button 
-              onClick={() => setIsAdmin(!isAdmin)}
+              onClick={handleToggleAdminClick}
               style={{
                 background: isAdmin ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.08)',
                 border: `1px solid ${isAdmin ? 'var(--gold)' : 'rgba(255, 255, 255, 0.15)'}`,
@@ -351,21 +420,21 @@ export default function App() {
             </div>
 
             <h2 style={{ fontSize: '2.2rem', fontWeight: 800, lineHeight: '1.2' }}>
-              {INITIAL_EVENT.title}
+              {eventData.title}
             </h2>
 
             <p style={{ color: 'var(--text-muted)', fontSize: '1.05rem', maxWidth: '700px' }}>
-              {INITIAL_EVENT.subtitle}
+              {eventData.subtitle}
             </p>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginTop: '8px', color: '#e5e7eb', fontSize: '0.95rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <MapPin size={18} color="var(--primary)" />
-                <span>{INITIAL_EVENT.location}</span>
+                <span>{eventData.location}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Calendar size={18} color="var(--secondary)" />
-                <span>{INITIAL_EVENT.date}</span>
+                <span>{eventData.date}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <ShieldCheck size={18} color="var(--status-free)" />
@@ -423,11 +492,37 @@ export default function App() {
         {/* ORGANIZER ADMIN VIEW OVERLAY SUMMARY IF ADMIN MODE */}
         {isAdmin && (
           <section className="glass-panel" style={{ padding: '24px', marginBottom: '32px', border: '1px solid var(--gold)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
               <h3 style={{ color: 'var(--gold)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <ShieldCheck size={22} /> Panel de Control del Organizador
               </h3>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Gestión directa de reservas y confirmación de pagos</span>
+              
+              <button 
+                onClick={() => {
+                  setEditTitle(eventData.title);
+                  setEditSubtitle(eventData.subtitle);
+                  setEditLocation(eventData.location);
+                  setEditDate(eventData.date);
+                  setEditNoBedPrice(eventData.noBedPrice);
+                  setEditNoBedMax(eventData.noBedCapacityMax);
+                  setIsEditEventModalOpen(true);
+                }}
+                style={{
+                  background: 'rgba(245, 158, 11, 0.2)',
+                  border: '1px solid var(--gold)',
+                  color: 'var(--gold)',
+                  padding: '8px 16px',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                ✏️ Editar Próxima Fiesta (Lugar, Fecha, Precios)
+              </button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
@@ -863,6 +958,152 @@ export default function App() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PIN DE ADMINISTRADOR */}
+      {isPinModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsPinModalOpen(false)}>
+          <div 
+            className="glass-panel" 
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '380px', width: '100%', padding: '28px', borderRadius: '20px', border: '1px solid var(--gold)' }}
+          >
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px auto' }}>
+                <Lock size={24} color="var(--gold)" />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Acceso de Organizador</h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Ingresa tu PIN de seguridad para acceder al panel de administración.
+              </p>
+            </div>
+
+            <form onSubmit={handleVerifyPin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <input 
+                type="password" 
+                autoFocus
+                required
+                maxLength={6}
+                placeholder="Ingresa PIN (Ej: 2026)"
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value)}
+                style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--gold)', color: '#fff', fontSize: '1.1rem', textAlign: 'center', letterSpacing: '4px', fontWeight: 700 }}
+              />
+
+              <button type="submit" className="glow-btn" style={{ padding: '12px', fontSize: '0.95rem' }}>
+                Ingresar como Admin 🔑
+              </button>
+
+              <button 
+                type="button" 
+                onClick={() => setIsPinModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem' }}
+              >
+                Cancelar
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL EDITAR DATOS DE LA FIESTA */}
+      {isEditEventModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsEditEventModalOpen(false)}>
+          <div 
+            className="glass-panel" 
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '520px', width: '100%', padding: '28px', borderRadius: '24px', border: '1px solid var(--gold)' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--gold)' }}>✏️ Editar Próxima Fiesta</h3>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Los cambios se actualizarán en vivo para todos los usuarios.</span>
+              </div>
+              <button 
+                onClick={() => setIsEditEventModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEventData} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Título del Evento</label>
+                <input 
+                  type="text" 
+                  required
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.9rem' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Subtítulo / Descripción CORTA</label>
+                <input 
+                  type="text" 
+                  required
+                  value={editSubtitle}
+                  onChange={(e) => setEditSubtitle(e.target.value)}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.9rem' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Ubicación / Villa</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={editLocation}
+                    onChange={(e) => setEditLocation(e.target.value)}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.9rem' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Fecha y Hora</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={editDate}
+                    onChange={(e) => setEditDate(e.target.value)}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.9rem' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Precio Pareja Sin Cama (USD)</label>
+                  <input 
+                    type="number" 
+                    required
+                    value={editNoBedPrice}
+                    onChange={(e) => setEditNoBedPrice(e.target.value)}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.9rem' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Capacidad Max Sin Cama</label>
+                  <input 
+                    type="number" 
+                    required
+                    value={editNoBedMax}
+                    onChange={(e) => setEditNoBedMax(e.target.value)}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.9rem' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginTop: '12px' }}>
+                <button type="submit" className="glow-btn" style={{ width: '100%', padding: '12px', fontSize: '0.95rem' }}>
+                  Guardar Cambios del Evento 💾
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
