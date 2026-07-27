@@ -296,6 +296,12 @@ export default function App() {
     }
   };
 
+  const handleAttemptCloseEditModal = () => {
+    if (window.confirm('⚠️ Tienes una edición de fiesta en proceso. ¿Estás seguro de salir sin guardar los cambios?')) {
+      setIsEditEventModalOpen(false);
+    }
+  };
+
   // Supabase Realtime Listener (if configured)
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
@@ -1208,7 +1214,7 @@ export default function App() {
 
       {/* MODAL EDITAR DATOS DE LA FIESTA */}
       {isEditEventModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsEditEventModalOpen(false)}>
+        <div className="modal-overlay" onClick={handleAttemptCloseEditModal}>
           <div 
             className="glass-panel" 
             onClick={(e) => e.stopPropagation()}
@@ -1220,7 +1226,8 @@ export default function App() {
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Los cambios se actualizarán en vivo para todos los usuarios.</span>
               </div>
               <button 
-                onClick={() => setIsEditEventModalOpen(false)}
+                type="button"
+                onClick={handleAttemptCloseEditModal}
                 style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem' }}
               >
                 ✕
