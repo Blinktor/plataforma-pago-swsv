@@ -1160,6 +1160,18 @@ export default function App() {
                 </div>
               </div>
 
+              <div>
+                <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Mecanismo de Confirmación de Pago</label>
+                <select 
+                  value={formPaymentMethod}
+                  onChange={(e) => setFormPaymentMethod(e.target.value)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '10px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border-glass)', color: '#fff', fontSize: '0.9rem' }}
+                >
+                  <option value="bank_transfer_whatsapp">📱 Notificar Transferencia por WhatsApp</option>
+                  <option value="bank_transfer_upload">🖼️ Subir Foto de Voucher / Comprobante aquí en la web</option>
+                </select>
+              </div>
+
               <div style={{ marginTop: '12px' }}>
                 <button type="submit" className="glow-btn" style={{ width: '100%', padding: '14px', fontSize: '1rem' }}>
                   Confirmar Reserva y Ver Datos de Transferencia 🏦
@@ -1177,23 +1189,23 @@ export default function App() {
           <div 
             className="ticket-pass"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '440px', width: '100%', padding: '32px' }}
+            style={{ maxWidth: '460px', width: '100%', maxHeight: '85vh', overflowY: 'auto', padding: '24px', borderRadius: '24px', border: '1px solid var(--gold)' }}
           >
-            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <span style={{ fontSize: '0.75rem', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 800 }}>
                 PASS VIP POST-PAGO
               </span>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff', marginTop: '2px' }}>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff', marginTop: '2px' }}>
                 SWSV SUNSET PARTY
               </h3>
               <div style={{ display: 'inline-block', marginTop: '6px', padding: '4px 12px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid var(--gold)', color: 'var(--gold)', fontSize: '0.78rem', fontWeight: 700 }}>
-                PENDIENTE DE PAGO EN ENTRADA
+                PENDIENTE DE TRANSFERENCIA
               </div>
             </div>
 
             {/* QR SVG SIMULATED */}
-            <div style={{ background: '#fff', padding: '16px', borderRadius: '16px', display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
-              <svg width="140" height="140" viewBox="0 0 100 100">
+            <div style={{ background: '#fff', padding: '12px', borderRadius: '16px', display: 'flex', justifyContent: 'center', margin: '14px 0' }}>
+              <svg width="120" height="120" viewBox="0 0 100 100">
                 <rect width="100" height="100" fill="#ffffff" />
                 <path d="M10 10h30v30h-30z M15 15h20v20h-20z M60 10h30v30h-30z M65 15h20v20h-20z M10 60h30v30h-30z M15 65h20v20h-20z" fill="#000" />
                 <rect x="50" y="50" width="15" height="15" fill="#000" />
@@ -1204,7 +1216,7 @@ export default function App() {
               </svg>
             </div>
 
-            <div style={{ borderTop: '1px dashed rgba(255,255,255,0.2)', paddingTop: '16px', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ borderTop: '1px dashed rgba(255,255,255,0.2)', paddingTop: '14px', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {copiedNotice && (
                 <div style={{ background: 'rgba(16, 185, 129, 0.2)', border: '1px solid #34d399', color: '#34d399', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', textAlign: 'center', fontWeight: 700, marginBottom: '6px' }}>
                   {copiedNotice}
@@ -1226,7 +1238,7 @@ export default function App() {
               </div>
 
               {/* AVISO EXPLICATIVO DE REFERENCIA BANCARIA */}
-              <div style={{ background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '8px 12px', borderRadius: '8px', fontSize: '0.78rem', color: '#fbbf24', margin: '2px 0 6px 0', lineHeight: '1.4' }}>
+              <div style={{ background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '8px 12px', borderRadius: '8px', fontSize: '0.78rem', color: '#fbbf24', margin: '2px 0 4px 0', lineHeight: '1.4' }}>
                 💡 <strong>Importante:</strong> Agrega este código (<strong>#{generatedTicket.refCode}</strong>) en la descripción o concepto de tu transferencia para identificar tu pago inmediatamente.
               </div>
 
@@ -1245,7 +1257,7 @@ export default function App() {
                   <button 
                     type="button"
                     onClick={() => handleCopyBank(generatedTicket.selectedBankAccount, generatedTicket.selectedBankName)}
-                    style={{ padding: '6px 12px', background: 'rgba(245, 158, 11, 0.25)', border: '1px solid var(--gold)', borderRadius: '8px', color: 'var(--gold)', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    style={{ padding: '6px 12px', background: 'rgba(245, 158, 11, 0.25)', border: '1px solid var(--gold)', borderRadius: '6px', color: 'var(--gold)', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
                     📋 Copiar N°
                   </button>
@@ -1275,93 +1287,94 @@ export default function App() {
               </div>
             </div>
 
-            {/* SECCIÓN INTERACTIVA DE ADJUNTAR COMPROBANTE DE PAGO EN EL TICKET PASS */}
-            <div style={{ marginTop: '14px', background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '12px', border: '1px dashed var(--gold)', textAlign: 'center' }}>
-              <span style={{ fontSize: '0.82rem', color: 'var(--gold)', fontWeight: 700, display: 'block', marginBottom: '4px' }}>
-                🖼️ Adjuntar Foto de Comprobante / Voucher
-              </span>
-              {generatedTicket.voucherImage ? (
-                <div>
-                  <span style={{ fontSize: '0.75rem', color: '#34d399', fontWeight: 700, display: 'block', marginBottom: '6px' }}>
-                    ✅ Comprobante Recibido (En Verificación por Admin)
+            {/* SECCIÓN SEGÚN MECANISMO DE CONFIRMACIÓN ELEGIDO */}
+            <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {generatedTicket.paymentMethod === 'bank_transfer_upload' ? (
+                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '12px', border: '1px dashed var(--gold)', textAlign: 'center' }}>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--gold)', fontWeight: 700, display: 'block', marginBottom: '4px' }}>
+                    🖼️ Adjuntar Foto de Comprobante / Voucher
                   </span>
-                  <img src={generatedTicket.voucherImage} alt="Voucher" style={{ maxHeight: '110px', borderRadius: '8px', border: '1px solid var(--gold)', margin: '0 auto 8px auto' }} />
-                  <label style={{ cursor: 'pointer', fontSize: '0.75rem', color: 'var(--text-muted)', textDecoration: 'underline', display: 'block' }}>
-                    Cambiar foto de comprobante
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setGeneratedTicket(prev => ({ ...prev, voucherImage: reader.result, paymentStatus: 'in_verification' }));
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
-                  </label>
+                  {generatedTicket.voucherImage ? (
+                    <div>
+                      <span style={{ fontSize: '0.75rem', color: '#34d399', fontWeight: 700, display: 'block', marginBottom: '6px' }}>
+                        ✅ Comprobante Recibido (En Verificación por Admin)
+                      </span>
+                      <img src={generatedTicket.voucherImage} alt="Voucher" style={{ maxHeight: '100px', borderRadius: '8px', border: '1px solid var(--gold)', margin: '0 auto 8px auto' }} />
+                      <label style={{ cursor: 'pointer', fontSize: '0.75rem', color: 'var(--text-muted)', textDecoration: 'underline', display: 'block' }}>
+                        Cambiar foto de comprobante
+                        <input 
+                          type="file" 
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setGeneratedTicket(prev => ({ ...prev, voucherImage: reader.result, paymentStatus: 'in_verification' }));
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+                  ) : (
+                    <div>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                        Al realizar tu transferencia con el código <strong>#{generatedTicket.refCode}</strong>, adjunta tu comprobante aquí:
+                      </p>
+                      <label style={{ display: 'inline-block', padding: '8px 16px', background: 'rgba(245, 158, 11, 0.25)', border: '1px solid var(--gold)', borderRadius: '8px', color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>
+                        📂 Subir Foto de Voucher Aquí
+                        <input 
+                          type="file" 
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setGeneratedTicket(prev => ({ ...prev, voucherImage: reader.result, paymentStatus: 'in_verification' }));
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                    Al realizar tu transferencia con el código <strong>#{generatedTicket.refCode}</strong>, adjunta tu comprobante aquí:
-                  </p>
-                  <label style={{ display: 'inline-block', padding: '8px 16px', background: 'rgba(245, 158, 11, 0.25)', border: '1px solid var(--gold)', borderRadius: '8px', color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>
-                    📂 Subir Foto de Voucher Aquí
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setGeneratedTicket(prev => ({ ...prev, voucherImage: reader.result, paymentStatus: 'in_verification' }));
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
-                  </label>
-                </div>
+                <a 
+                  href={`https://wa.me/?text=${encodeURIComponent(`Hola Swinger El Salvador! Acabo de hacer la reserva #${generatedTicket.id} con la Referencia Bancaria #${generatedTicket.refCode} a nombre de ${generatedTicket.partner1} & ${generatedTicket.partner2}. Modalidad: ${generatedTicket.mode === 'with_bed' ? 'Con Cama #' + generatedTicket.bedInfo?.number : 'Sin Cama'}. Monto: $${generatedTicket.price} USD. Te adjunto el comprobante de transferencia.`)}`}
+                  target="_blank" 
+                  rel="noreferrer"
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '8px', 
+                    padding: '12px', 
+                    borderRadius: '12px', 
+                    background: '#25D366', 
+                    color: '#000', 
+                    fontWeight: 700, 
+                    textDecoration: 'none',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <Send size={18} /> Enviar Comprobante por WhatsApp
+                </a>
               )}
-            </div>
-
-            <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <a 
-                href={`https://wa.me/?text=${encodeURIComponent(`Hola Swinger El Salvador! Acabo de hacer la reserva #${generatedTicket.id} con la Referencia Bancaria #${generatedTicket.refCode} a nombre de ${generatedTicket.partner1} & ${generatedTicket.partner2}. Modalidad: ${generatedTicket.mode === 'with_bed' ? 'Con Cama #' + generatedTicket.bedInfo?.number : 'Sin Cama'}. Monto: $${generatedTicket.price} USD. Te adjunto el comprobante de transferencia.`)}`}
-                target="_blank" 
-                rel="noreferrer"
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  gap: '8px', 
-                  padding: '12px', 
-                  borderRadius: '12px', 
-                  background: '#25D366', 
-                  color: '#000', 
-                  fontWeight: 700, 
-                  textDecoration: 'none',
-                  fontSize: '0.9rem'
-                }}
-              >
-                <Send size={18} /> Enviar Comprobante por WhatsApp
-              </a>
 
               <button 
                 onClick={() => setGeneratedTicket(null)}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.85rem' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.85rem', marginTop: '4px' }}
               >
                 Cerrar Ventana
               </button>
             </div>
-
           </div>
         </div>
       )}
