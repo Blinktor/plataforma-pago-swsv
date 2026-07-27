@@ -327,19 +327,25 @@ export default function App() {
               src="/logo.png" 
               alt="Swinger El Salvador" 
               style={{ 
-                width: '44px', 
-                height: '44px', 
-                borderRadius: '12px', 
+                width: '58px', 
+                height: '58px', 
+                borderRadius: '16px', 
                 objectFit: 'cover',
-                boxShadow: '0 0 16px rgba(245, 158, 11, 0.4)',
-                border: '1px solid rgba(245, 158, 11, 0.4)'
+                boxShadow: '0 0 20px rgba(245, 158, 11, 0.45)',
+                border: '1.5px solid rgba(245, 158, 11, 0.6)'
               }} 
             />
             <div>
-              <h1 style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.5px', background: 'linear-gradient(90deg, #fff, #fbbf24)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Swinger El Salvador
+              <h1 style={{ 
+                fontSize: '1.45rem', 
+                fontWeight: 800, 
+                letterSpacing: '-0.3px', 
+                color: '#ffffff',
+                textShadow: '0 2px 8px rgba(0,0,0,0.6)'
+              }}>
+                Swinger <span style={{ color: '#fbbf24' }}>El Salvador</span>
               </h1>
-              <span style={{ fontSize: '0.8rem', color: 'var(--gold)', fontWeight: 600 }}>@Swinger_SV</span>
+              <span style={{ fontSize: '0.88rem', color: '#f59e0b', fontWeight: 700, letterSpacing: '0.5px' }}>@Swinger_SV</span>
             </div>
           </div>
 
