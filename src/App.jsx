@@ -255,8 +255,13 @@ export default function App() {
 
   // Past Event History State (preserves historical record when starting a new event)
   const [pastEvents, setPastEvents] = useState(() => {
-    const saved = localStorage.getItem('swsv_event_history');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('swsv_event_history');
+      return saved ? JSON.parse(saved) : [];
+    } catch (err) {
+      console.warn("Failed to parse event history from localStorage:", err);
+      return [];
+    }
   });
 
   const handleResetAllBookings = () => {
